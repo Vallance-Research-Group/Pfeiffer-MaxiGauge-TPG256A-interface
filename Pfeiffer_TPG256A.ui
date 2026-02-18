@@ -470,7 +470,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="lineEdit">
+     <widget class="QLineEdit" name="pLabelCh1">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -501,7 +501,7 @@
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
      </widget>
-     <widget class="QLineEdit" name="lineEdit_2">
+     <widget class="QLineEdit" name="pLabelCh2">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -528,7 +528,7 @@
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
      </widget>
-     <widget class="QLineEdit" name="lineEdit_3">
+     <widget class="QLineEdit" name="pLabelCh3">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -555,7 +555,7 @@
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
      </widget>
-     <widget class="QLineEdit" name="lineEdit_4">
+     <widget class="QLineEdit" name="pLabelCh4">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -582,7 +582,7 @@
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
      </widget>
-     <widget class="QLineEdit" name="lineEdit_5">
+     <widget class="QLineEdit" name="pLabelCh5">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -609,7 +609,7 @@
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
      </widget>
-     <widget class="QLineEdit" name="lineEdit_6">
+     <widget class="QLineEdit" name="pLabelCh6">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -641,7 +641,7 @@
      <attribute name="title">
       <string>Monitor - graph</string>
      </attribute>
-     <widget class="PlotWidget" name="graphWidget" native="true">
+     <widget class="PlotWidget" name="pressureGraphWidget" native="true">
       <property name="geometry">
        <rect>
         <x>0</x>
@@ -663,72 +663,46 @@
       <property name="text">
        <string>Log scale</string>
       </property>
-     </widget>
-     <widget class="QLabel" name="label">
-      <property name="geometry">
-       <rect>
-        <x>80</x>
-        <y>330</y>
-        <width>331</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Display channel(s)</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
+      <property name="checked">
+       <bool>true</bool>
       </property>
      </widget>
      <widget class="QWidget" name="">
       <property name="geometry">
        <rect>
-        <x>80</x>
-        <y>350</y>
-        <width>332</width>
-        <height>22</height>
+        <x>169</x>
+        <y>340</y>
+        <width>251</width>
+        <height>24</height>
        </rect>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QCheckBox" name="displayCh1">
+        <widget class="QLabel" name="label">
          <property name="text">
-          <string>Ch. 1</string>
+          <string>Autorange time window / minutes</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="displayCh2">
-         <property name="text">
-          <string>Ch. 2</string>
+        <widget class="QDoubleSpinBox" name="timeRangeSpin">
+         <property name="minimumSize">
+          <size>
+           <width>20</width>
+           <height>0</height>
+          </size>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="displayCh3">
-         <property name="text">
-          <string>Ch. 3</string>
+         <property name="minimum">
+          <double>0.010000000000000</double>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="displayCh4">
-         <property name="text">
-          <string>Ch. 4</string>
+         <property name="maximum">
+          <double>600.000000000000000</double>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="displayCh5">
-         <property name="text">
-          <string>Ch. 5</string>
+         <property name="singleStep">
+          <double>0.500000000000000</double>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="displayCh6">
-         <property name="text">
-          <string>Ch. 6</string>
+         <property name="value">
+          <double>5.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -809,6 +783,12 @@
       <height>22</height>
      </rect>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
    </widget>
    <widget class="QPushButton" name="changeLogButton">
     <property name="geometry">
@@ -837,8 +817,17 @@
     <property name="title">
      <string>Config</string>
     </property>
-    <addaction name="actionChangeLogDir"/>
+    <widget class="QMenu" name="menuSet_time_period">
+     <property name="title">
+      <string>Set time period</string>
+     </property>
+     <addaction name="actionPressureReadPeriod"/>
+     <addaction name="actionLogWritePeriod"/>
+    </widget>
+    <addaction name="menuSet_time_period"/>
+    <addaction name="separator"/>
     <addaction name="actionSaveConfig"/>
+    <addaction name="actionRestoreDefaults"/>
    </widget>
    <addaction name="menuConfig"/>
   </widget>
@@ -851,6 +840,21 @@
   <action name="actionSaveConfig">
    <property name="text">
     <string>Save configuration</string>
+   </property>
+  </action>
+  <action name="actionPressureReadPeriod">
+   <property name="text">
+    <string>Pressure read</string>
+   </property>
+  </action>
+  <action name="actionLogWritePeriod">
+   <property name="text">
+    <string>Log write</string>
+   </property>
+  </action>
+  <action name="actionRestoreDefaults">
+   <property name="text">
+    <string>Restore default state</string>
    </property>
   </action>
  </widget>
