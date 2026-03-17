@@ -4,6 +4,7 @@ from Functions.monitor_pressure_gauge import pressureGauge_Qthread
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import QMessageBox
 import time
+from numpy import nan as np_nan
 
 def get_com_port_list():
     # May have to try opening and closing all the ports if it does
@@ -122,6 +123,7 @@ class pressureSerial(SerialPort):
             # This is the usual response
             if status == 0:
                 # Set display, with numbers rounded to 2 d.p.
+                response = float(response)
                 if response > 1:
                     self.pressure_displays[idx].setText(f'{response:.2f}{self.P_units}')
                 else:
@@ -129,6 +131,7 @@ class pressureSerial(SerialPort):
 
             else:
                 self.pressure_displays[idx].setText(response)
+                response = np_nan
 
             self.current_pressures[idx] = response
 
