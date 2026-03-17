@@ -92,8 +92,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if res:
             self.pressure_read_period = int(value * 1000)
             self.query_timer.start(self.pressure_read_period)
-            self.testing_timer.start(self.pressure_read_period)
-
 
 
     def update_log_timer(self):
