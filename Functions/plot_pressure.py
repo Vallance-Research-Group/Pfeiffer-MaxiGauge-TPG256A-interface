@@ -11,7 +11,7 @@ class pressurePlot():
         self.graphWidget = graph_widget
 
         self.graphWidget.setBackground("w")
-        styles = {"color": "black", "font-size": "14px"}
+        styles = {"color": "black", "font-size": "18px"}
         self.graphWidget.setLabel("left", "Pressure / mbar", **styles)
         self.graphWidget.setLabel("bottom", "Time", **styles)
         x_axis = pg.DateAxisItem()
@@ -23,7 +23,7 @@ class pressurePlot():
         self.plotItem.setAxisItems({'bottom': x_axis})
 
         # Initialise plot for each channel
-        self.pressurePlots = [pg.PlotDataItem([1,2], [1,2], name=f'Ch. {i+1}', pen={'color':colour, 'width': 1.5}) for i, colour in enumerate(['black','orange','blue','cyan','darkRed','green'])]
+        self.pressurePlots = [pg.PlotDataItem([1,2], [1,2], name=f'Ch. {i+1}', pen={'color':colour, 'width': 2}) for i, colour in enumerate(['black','orange','blue','cyan','darkRed','green'])]
         [self.plotItem.addItem(_) for _ in self.pressurePlots]
 
         # Make arrays to store the time and pressures
