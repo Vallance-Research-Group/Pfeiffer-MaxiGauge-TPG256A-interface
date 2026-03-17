@@ -245,11 +245,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
             # Write time (and date on first instance)
             if self.date != datetime[:8]:
-                f.write(datetime + '\t')
+                f.write(f'Date: {datetime[:8]}\n')
                 self.date = datetime[:8]
 
-            else:
-                f.write(datetime[-8:] + '\t')
+            f.write(datetime[-8:] + '\t')
 
             # Pressure
             f.write('\t'.join([f'{self.pressure_plot.pressure_array[i,-1]}\t' for i in range(6)]))
