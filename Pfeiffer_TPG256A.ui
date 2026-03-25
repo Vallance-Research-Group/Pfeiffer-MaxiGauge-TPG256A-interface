@@ -654,10 +654,10 @@
      <widget class="QCheckBox" name="logScaleCheck">
       <property name="geometry">
        <rect>
-        <x>0</x>
+        <x>10</x>
         <y>340</y>
         <width>75</width>
-        <height>20</height>
+        <height>21</height>
        </rect>
       </property>
       <property name="text">
@@ -670,41 +670,44 @@
      <widget class="QWidget" name="">
       <property name="geometry">
        <rect>
-        <x>169</x>
+        <x>110</x>
         <y>340</y>
-        <width>251</width>
+        <width>121</width>
         <height>24</height>
        </rect>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QLabel" name="label">
+        <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>Autorange time window / minutes</string>
+          <string>Tick font size</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QDoubleSpinBox" name="timeRangeSpin">
-         <property name="minimumSize">
-          <size>
-           <width>20</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="minimum">
-          <double>0.010000000000000</double>
-         </property>
-         <property name="maximum">
-          <double>600.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.500000000000000</double>
-         </property>
-         <property name="value">
-          <double>5.000000000000000</double>
+        <widget class="QSpinBox" name="spinBox"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>250</x>
+        <y>340</y>
+        <width>161</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Plot line thickness</string>
          </property>
         </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
        </item>
       </layout>
      </widget>
@@ -825,6 +828,7 @@
      <addaction name="actionLogWritePeriod"/>
     </widget>
     <addaction name="menuSet_time_period"/>
+    <addaction name="actionSetAutorangeWindow"/>
     <addaction name="separator"/>
     <addaction name="actionSaveConfig"/>
     <addaction name="actionRestoreDefaults"/>
@@ -855,6 +859,11 @@
   <action name="actionRestoreDefaults">
    <property name="text">
     <string>Restore default state</string>
+   </property>
+  </action>
+  <action name="actionSetAutorangeWindow">
+   <property name="text">
+    <string>Set autorange window</string>
    </property>
   </action>
  </widget>
