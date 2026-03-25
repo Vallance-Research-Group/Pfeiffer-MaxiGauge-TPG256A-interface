@@ -54,6 +54,16 @@ class pressurePlot():
         except AttributeError: pass
 
 
+    def set_font_size(self, size):
+        self.font_size = size
+
+        # Generate new font and assign to the tick axes
+        font=QtGui.QFont()
+        font.setPixelSize(size)
+        self.graphWidget.getAxis("bottom").setStyle(tickFont = font)
+        self.graphWidget.getAxis("left").setStyle(tickFont = font)
+
+
     def plot_data(self):
         # Add data
         if self.log_scale:

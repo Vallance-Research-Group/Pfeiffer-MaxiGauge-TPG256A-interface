@@ -39,6 +39,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Connections to change graphing defaults
         self.logScaleCheck.stateChanged.connect(self.pressure_plot.set_y_scale_type)
+        self.spinFontSize.valueChanged.connect(self.pressure_plot.set_font_size)
 
         # Add plot update function to the serial connection class
         self.pressureGaugeSerial.update_pressure = self.pressure_plot.update_pressure
