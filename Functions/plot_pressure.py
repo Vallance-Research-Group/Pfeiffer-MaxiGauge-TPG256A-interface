@@ -1,4 +1,5 @@
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 from numpy import nan as np_nan, array as np_array, roll as np_roll, empty as np_empty, log10 as np_log10
 import time
 import os
@@ -46,7 +47,7 @@ class pressurePlot():
 
 
     def set_auto_graph_time(self, time):
-        # Time is in minutes, so convert to seconds to match UI
+        # Time is provided in minutes, so convert to seconds for plotting purposes
         self.autoGraphTime = time * 60
 
         # Plot data if there is data to plot
