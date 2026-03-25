@@ -11,7 +11,7 @@ class pressurePlot():
         self.graphWidget = graph_widget
 
         self.graphWidget.setBackground("w")
-        styles = {"color": "black", "font-size": "18px"}
+        styles = {"color": "black", "font-size": "14px"}
         self.graphWidget.setLabel("left", "Pressure / mbar", **styles)
         self.graphWidget.setLabel("bottom", "Time", **styles)
         x_axis = pg.DateAxisItem()
