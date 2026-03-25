@@ -36,11 +36,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pressure_plot = pressurePlot(self.pressureGraphWidget)
         # Set graph state (y scale type, time range to display on autorange)
         self.pressure_plot.set_y_scale_type(self.logScaleCheck.isChecked())
-        self.pressure_plot.set_auto_graph_time(self.timeRangeSpin.value())
 
         # Connections to change graphing defaults
         self.logScaleCheck.stateChanged.connect(self.pressure_plot.set_y_scale_type)
-        self.timeRangeSpin.valueChanged.connect(self.pressure_plot.set_auto_graph_time)
 
         # Add plot update function to the serial connection class
         self.pressureGaugeSerial.update_pressure = self.pressure_plot.update_pressure
@@ -58,6 +56,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionRestoreDefaults.triggered.connect(self.delete_config)
         self.actionPressureReadPeriod.triggered.connect(self.update_pressure_query_timer)
         self.actionLogWritePeriod.triggered.connect(self.update_log_timer)
+        self.actionSetAutorangeWindow.triggered.connect(self.update_plot_autorange_time_window)
 
         self.changeLogButton.clicked.connect(self.change_log_path)
         # Initialise for writing log
@@ -120,7 +119,24 @@ class MainWindow(QtWidgets.QMainWindow):
 
     ###############################################################################
 
-    # Read and write config file ###################################################
+    # Action menu #################################################################
+
+    def update_plot_autorange_time_window(self):
+        value, res = QtWidgets.QInputDialog.getDouble(self,
+                            'Set autorange time window',
+                            'Set autorange time window (in minutes) between 0.5 min and 120 min.',
+                            round(self.pressure_plot.autoGraphTime / 60, 2), # Initial value
+                            0.5,                             # Minimum value
+                            120,                               # Maximum value
+                            2)                                # Decimal places
+
+        # Update timer time period if updated. Timer takes ms input.
+        if res:
+            self.pressure_plot.set_auto_graph_time(value)
+
+    ###############################################################################
+
+    # Read and write config file ##################################################
     # Config file format by line:
     # COM port
     # Channels name and plot state (tab delimited, state 1/0)
@@ -157,12 +173,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pressure_read_period = 1000
             self.log_write_period = 30000
             self.log_dir = 'Log files'
+            self.pressure_plot.set_auto_graph_time(5.)
 
+            # These options are set by default in the GUI, so only need to be used when resetting the configuration
             if reset_config:
                 for i in range(6):
                     exec(f"self.pLabelCh{i+1}.setText('Channel {i+1}:')")
                     self.pressure_plot.set_plot_visibility(i, True)
-                self.pressure_plot.set_auto_graph_time(5.)
                 self.logScaleCheck.setChecked(True)
                 self.saveLogCheck.setChecked(True)
 
@@ -180,7 +197,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 f.write(f'{eval(f'self.pLabelCh{i+1}.text()')}\t')
                 f.write(f'{int(self.pressure_plot.pressurePlots[i].isVisible())}\n')
             f.write(f'{self.pressure_read_period}\n')
-            f.write(f'{self.timeRangeSpin.value()}\n')
+            f.write(f'{self.pressure_plot.autoGraphTime}\n')
             f.write(f'{int(self.logScaleCheck.isChecked())}\n')
             f.write(f'{int(self.saveLogCheck.isChecked())}\n')
             f.write(f'{self.log_dir}\n')
