@@ -25,6 +25,8 @@ The log file consists of a header, followed by lines containg the time and press
 
 At present, it is assumed that the pressure units are not changed during operation. For the display to update with the correct units, the connection must be toggled off and on. Note that the log file will not note the new units, so a new log file would also need to be created for clarity.
 
+To test the code without a MaxiGauge, use the <a href="https://github.com/Vallance-Research-Group/Pfeiffer-MaxiGauge-TPG256A-interface/tree/Testing">Testing branch</a> to generate false data for each channel.
+
 ## Potential upgrades
 
  - Add option to convert all pressures to units chosen by user to keep units in log file consistent, regardless of units chosen on MaxiGauge.
