@@ -9,6 +9,9 @@ from Functions.serial_connection import pressureSerial as pSerial
 from Functions.plot_pressure import pressurePlot
 from math import ceil
 from pathlib import Path
+import numpy as np
+
+print('Please note that this is the testing branch. False data are generated for each channel, allowing some features to be tested without requiring a connection to a MaxiGauge.')
 
 pg.setConfigOption('foreground', 'k')
 pg.setConfigOption('background', 'w')
@@ -113,11 +116,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # Functions run on timers #####################################################
     def execute_gauge_query(self):
+        for i in range(6):
+            self.pressureGaugeSerial.process_responses(0, i, eval(f'1E-{i+2} + np.random.randn() * 2E-{i+3}'))
+
         if self.pressureGaugeSerial.connected:
             self.pressureGaugeSerial.queryGauge.emit()
 
     def execute_log_write(self):
-        if self.pressureGaugeSerial.connected and self.saveLogCheck.isChecked():
+        # if self.pressureGaugeSerial.connected and self.saveLogCheck.isChecked():
+        if self.saveLogCheck.isChecked():
             self.write_log()
 
     ###############################################################################
