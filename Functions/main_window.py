@@ -222,8 +222,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def delete_config(self):
         if not os.path.isfile("user_config.txt"):
-            msg = QtWidgets.QMessageBox(text='No user config file found.', windowTitle='File not found')
-            msg.exec(); return
+            msgbox = QtWidgets.QMessageBox(text='Are you sure you want to reset to the default state?', windowTitle='Confirm config reset')
+
+            msgbox.setStandardButtons(
+                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.Cancel
+                )
+
+            res = msgbox.exec()
+            
+            if res == QtWidgets.QMessageBox.StandardButton.Yes: self.load_defaults(reset_config=True)
+            return
 
         msgbox = QtWidgets.QMessageBox(icon=QtWidgets.QMessageBox.Icon.Question)
         msgbox.setWindowTitle('Config reset')
