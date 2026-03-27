@@ -40,6 +40,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Connections to change graphing defaults
         self.logScaleCheck.stateChanged.connect(self.pressure_plot.set_y_scale_type)
         self.spinFontSize.valueChanged.connect(self.pressure_plot.set_font_size)
+        self.spinLineWidth.valueChanged.connect(self.pressure_plot.set_pen)
 
         # Add plot update function to the serial connection class
         self.pressureGaugeSerial.update_pressure = self.pressure_plot.update_pressure
@@ -58,6 +59,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionPressureReadPeriod.triggered.connect(self.update_pressure_query_timer)
         self.actionLogWritePeriod.triggered.connect(self.update_log_timer)
         self.actionSetAutorangeWindow.triggered.connect(self.update_plot_autorange_time_window)
+        self.actionChangeLineColours.triggered.connect(self.pressure_plot.show_colour_window)
 
         self.changeLogButton.clicked.connect(self.change_log_path)
         # Initialise for writing log
@@ -147,6 +149,9 @@ class MainWindow(QtWidgets.QMainWindow):
     # Save pressure log (1/0)
     # Log directory
     # Log write time period / ms
+    # Tick text size
+    # Pen colours
+    # Pen width
 
     def load_defaults(self, *, reset_config=False):
         try:
@@ -169,6 +174,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.saveLogCheck.setChecked(int(f.readline().strip()))
                 self.log_dir = f.readline().strip()
                 self.log_write_period = int(f.readline().strip())
+                self.spinFontSize.setValue(int(f.readline().strip()))
+                self.pressure_plot.plotColours = eval(f.readline().strip())
+                self.spinLineWidth.setValue(float(f.readline().strip()))
         except FileNotFoundError:
             # Most options are initialised to their default values
             self.pressure_read_period = 1000
@@ -183,6 +191,10 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.pressure_plot.set_plot_visibility(i, True)
                 self.logScaleCheck.setChecked(True)
                 self.saveLogCheck.setChecked(True)
+                self.spinFontSize.setValue(12)
+                self.pressure_plot.reset_line_colours()
+
+            self.spinLineWidth.setValue(2.)
 
         if self.logFileName.text() == '':
             self.logFileName.setText(os.path.join(self.log_dir, time.strftime('%Y-%m-%d', time.localtime(time.time())) + '.txt'))
@@ -203,6 +215,9 @@ class MainWindow(QtWidgets.QMainWindow):
             f.write(f'{int(self.saveLogCheck.isChecked())}\n')
             f.write(f'{self.log_dir}\n')
             f.write(f'{self.log_write_period}\n')
+            f.write(f'{self.pressure_plot.font_size}\n')
+            f.write(f'{self.pressure_plot.plotColours}\n')
+            f.write(f'{self.pressure_plot.pen_width}\n')
 
 
     def delete_config(self):
@@ -280,5 +295,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Close connection to pressure gauge on closing the window
         if self.pressureGaugeSerial.connected:
             self.pressureGaugeSerial.worker.process_disconnect()
+
+        self.pressure_plot.plot_colour_window.close()
 
         time.sleep(0.3)

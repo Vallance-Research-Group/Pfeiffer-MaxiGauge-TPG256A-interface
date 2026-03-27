@@ -1,5 +1,6 @@
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
+from Functions.plot_colour_window import plotColourWindow
 from numpy import nan as np_nan, array as np_array, roll as np_roll, empty as np_empty, log10 as np_log10
 import time
 import os
@@ -7,6 +8,12 @@ import os
 class pressurePlot():
     def __init__(self, graph_widget):
         self.data_points = 0
+
+        # Set defaults
+        self.font_size = 12
+        self.pen_width = 2.
+        # Default colours are black, orange, blue, cyan, dark red and green
+        self.plotColours = [(0,0,0),(255,165,0),(0,0,255),(0,255,255),(139,0,0),(0,128,0)]
 
         # Set up the plotting
         self.graphWidget = graph_widget
@@ -24,12 +31,21 @@ class pressurePlot():
         self.plotItem.setAxisItems({'bottom': x_axis})
 
         # Initialise plot for each channel
-        self.pressurePlots = [pg.PlotDataItem([1,2], [1,2], name=f'Ch. {i+1}', pen={'color':colour, 'width': 2}) for i, colour in enumerate(['black','orange','blue','cyan','darkRed','green'])]
+        self.pressurePlots = [pg.PlotDataItem([1,2], [1,2], name=f'Ch. {i+1}', pen={'color':colour, 'width': 2}) for i, colour in enumerate(self.plotColours)]
         [self.plotItem.addItem(_) for _ in self.pressurePlots]
 
         # Make arrays to store the time and pressures
         self.time_array = np_empty(50000); self.time_array[:] = np_nan
         self.pressure_array = np_empty((6,50000)); self.pressure_array[:] = np_nan
+
+        # Set up window to change line colours
+        self.plot_colour_window = plotColourWindow(self.plotColours)
+        self.plot_colour_window.buttonBox.accepted.connect(self.set_line_colours)
+
+
+    def show_colour_window(self):
+        self.plot_colour_window.show()
+        self.plot_colour_window.activateWindow()
 
 
     def set_plot_visibility(self, idx, newState):
@@ -64,6 +80,29 @@ class pressurePlot():
         self.graphWidget.getAxis("bottom").setStyle(tickFont = font)
         self.graphWidget.getAxis("left").setStyle(tickFont = font)
 
+
+    def set_line_colours(self):
+        # Run the accept this way to make sure everything copies in the correct order
+        self.plot_colour_window.accept()
+        self.plotColours = self.plot_colour_window.original_colour_list
+        self.set_pen()
+
+
+    def reset_line_colours(self):
+        self.plotColours = [(0,0,0),(255,165,0),(0,0,255),(0,255,255),(139,0,0),(0,128,0)]
+        self.plot_colour_window.original_colour_list = [(0,0,0),(255,165,0),(0,0,255),(0,255,255),(139,0,0),(0,128,0)]
+        self.plot_colour_window.resetColours()
+        self.set_pen()
+
+
+    def set_pen(self, pen_width=-1):
+        # Update the pen width if required
+        if pen_width != -1:
+            self.pen_width = pen_width
+
+        # This changes the pen colour and width within each plot item
+        for _, colour in zip(self.pressurePlots, self.plotColours): _.setPen(color=colour, width=self.pen_width)
+            
 
     def plot_data(self):
         # Add data

@@ -773,16 +773,16 @@
              </sizepolicy>
             </property>
             <property name="minimum">
-             <double>0.100000000000000</double>
+             <double>0.500000000000000</double>
             </property>
             <property name="maximum">
-             <double>5.000000000000000</double>
+             <double>10.000000000000000</double>
             </property>
             <property name="singleStep">
-             <double>0.100000000000000</double>
+             <double>0.250000000000000</double>
             </property>
             <property name="value">
-             <double>1.500000000000000</double>
+             <double>2.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -852,6 +852,7 @@
     </widget>
     <addaction name="menuSet_time_period"/>
     <addaction name="actionSetAutorangeWindow"/>
+    <addaction name="actionChangeLineColours"/>
     <addaction name="separator"/>
     <addaction name="actionSaveConfig"/>
     <addaction name="actionRestoreDefaults"/>
@@ -887,6 +888,22 @@
   <action name="actionSetAutorangeWindow">
    <property name="text">
     <string>Set autorange window</string>
+   </property>
+  </action>
+  <action name="actionLineWeightUpdate">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Instant line weight update</string>
+   </property>
+  </action>
+  <action name="actionChangeLineColours">
+   <property name="text">
+    <string>Change line colours</string>
    </property>
   </action>
  </widget>
