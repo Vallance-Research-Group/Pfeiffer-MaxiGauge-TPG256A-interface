@@ -36,11 +36,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pressure_plot = pressurePlot(self.pressureGraphWidget)
         # Set graph state (y scale type, time range to display on autorange)
         self.pressure_plot.set_y_scale_type(self.logScaleCheck.isChecked())
-        self.pressure_plot.set_auto_graph_time(self.timeRangeSpin.value())
 
         # Connections to change graphing defaults
         self.logScaleCheck.stateChanged.connect(self.pressure_plot.set_y_scale_type)
-        self.timeRangeSpin.valueChanged.connect(self.pressure_plot.set_auto_graph_time)
+        self.spinFontSize.valueChanged.connect(self.pressure_plot.set_font_size)
+        self.spinLineWidth.valueChanged.connect(self.pressure_plot.set_pen)
 
         # Add plot update function to the serial connection class
         self.pressureGaugeSerial.update_pressure = self.pressure_plot.update_pressure
@@ -58,6 +58,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionRestoreDefaults.triggered.connect(self.delete_config)
         self.actionPressureReadPeriod.triggered.connect(self.update_pressure_query_timer)
         self.actionLogWritePeriod.triggered.connect(self.update_log_timer)
+        self.actionSetAutorangeWindow.triggered.connect(self.update_plot_autorange_time_window)
+        self.actionChangeLineColours.triggered.connect(self.pressure_plot.show_colour_window)
 
         self.changeLogButton.clicked.connect(self.change_log_path)
         # Initialise for writing log
@@ -120,7 +122,24 @@ class MainWindow(QtWidgets.QMainWindow):
 
     ###############################################################################
 
-    # Read and write config file ###################################################
+    # Action menu #################################################################
+
+    def update_plot_autorange_time_window(self):
+        value, res = QtWidgets.QInputDialog.getDouble(self,
+                            'Set autorange time window',
+                            'Set autorange time window (in minutes) between 0.5 min and 120 min.',
+                            round(self.pressure_plot.autoGraphTime / 60, 2), # Initial value
+                            0.5,                             # Minimum value
+                            120,                               # Maximum value
+                            2)                                # Decimal places
+
+        # Update timer time period if updated. Timer takes ms input.
+        if res:
+            self.pressure_plot.set_auto_graph_time(value)
+
+    ###############################################################################
+
+    # Read and write config file ##################################################
     # Config file format by line:
     # COM port
     # Channels name and plot state (tab delimited, state 1/0)
@@ -130,6 +149,9 @@ class MainWindow(QtWidgets.QMainWindow):
     # Save pressure log (1/0)
     # Log directory
     # Log write time period / ms
+    # Tick text size
+    # Pen colours
+    # Pen width
 
     def load_defaults(self, *, reset_config=False):
         try:
@@ -152,19 +174,27 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.saveLogCheck.setChecked(int(f.readline().strip()))
                 self.log_dir = f.readline().strip()
                 self.log_write_period = int(f.readline().strip())
+                self.spinFontSize.setValue(int(f.readline().strip()))
+                self.pressure_plot.plotColours = eval(f.readline().strip())
+                self.spinLineWidth.setValue(float(f.readline().strip()))
         except FileNotFoundError:
             # Most options are initialised to their default values
             self.pressure_read_period = 1000
             self.log_write_period = 30000
             self.log_dir = 'Log files'
+            self.pressure_plot.set_auto_graph_time(5.)
 
+            # These options are set by default in the GUI, so only need to be used when resetting the configuration
             if reset_config:
                 for i in range(6):
                     exec(f"self.pLabelCh{i+1}.setText('Channel {i+1}:')")
                     self.pressure_plot.set_plot_visibility(i, True)
-                self.pressure_plot.set_auto_graph_time(5.)
                 self.logScaleCheck.setChecked(True)
                 self.saveLogCheck.setChecked(True)
+                self.spinFontSize.setValue(12)
+                self.pressure_plot.reset_line_colours()
+
+            self.spinLineWidth.setValue(2.)
 
         if self.logFileName.text() == '':
             self.logFileName.setText(os.path.join(self.log_dir, time.strftime('%Y-%m-%d', time.localtime(time.time())) + '.txt'))
@@ -180,17 +210,28 @@ class MainWindow(QtWidgets.QMainWindow):
                 f.write(f'{eval(f'self.pLabelCh{i+1}.text()')}\t')
                 f.write(f'{int(self.pressure_plot.pressurePlots[i].isVisible())}\n')
             f.write(f'{self.pressure_read_period}\n')
-            f.write(f'{self.timeRangeSpin.value()}\n')
+            f.write(f'{self.pressure_plot.autoGraphTime}\n')
             f.write(f'{int(self.logScaleCheck.isChecked())}\n')
             f.write(f'{int(self.saveLogCheck.isChecked())}\n')
             f.write(f'{self.log_dir}\n')
             f.write(f'{self.log_write_period}\n')
+            f.write(f'{self.pressure_plot.font_size}\n')
+            f.write(f'{self.pressure_plot.plotColours}\n')
+            f.write(f'{self.pressure_plot.pen_width}\n')
 
 
     def delete_config(self):
         if not os.path.isfile("user_config.txt"):
-            msg = QtWidgets.QMessageBox(text='No user config file found.', windowTitle='File not found')
-            msg.exec(); return
+            msgbox = QtWidgets.QMessageBox(text='Are you sure you want to reset to the default state?', windowTitle='Confirm config reset')
+
+            msgbox.setStandardButtons(
+                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.Cancel
+                )
+
+            res = msgbox.exec()
+            
+            if res == QtWidgets.QMessageBox.StandardButton.Yes: self.load_defaults(reset_config=True)
+            return
 
         msgbox = QtWidgets.QMessageBox(icon=QtWidgets.QMessageBox.Icon.Question)
         msgbox.setWindowTitle('Config reset')
@@ -262,5 +303,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Close connection to pressure gauge on closing the window
         if self.pressureGaugeSerial.connected:
             self.pressureGaugeSerial.worker.process_disconnect()
+
+        self.pressure_plot.plot_colour_window.close()
 
         time.sleep(0.3)
