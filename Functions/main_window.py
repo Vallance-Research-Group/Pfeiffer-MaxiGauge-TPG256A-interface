@@ -116,11 +116,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # Functions run on timers #####################################################
     def execute_gauge_query(self):
-        for i in range(6):
-            self.pressureGaugeSerial.process_responses(0, i, eval(f'1E-{i+2} + np.random.randn() * 2E-{i+3}'))
-
         if self.pressureGaugeSerial.connected:
             self.pressureGaugeSerial.queryGauge.emit()
+        else:
+            for i in range(6):
+                self.pressureGaugeSerial.process_responses(0, i, eval(f'1E-{i+2} + np.random.randn() * 2E-{i+3}'))
 
     def execute_log_write(self):
         # if self.pressureGaugeSerial.connected and self.saveLogCheck.isChecked():
