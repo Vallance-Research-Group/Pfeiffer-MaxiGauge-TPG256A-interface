@@ -20,7 +20,8 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
 
         #Load the UI
-        uic.loadUi(os.path.join(Path.cwd(), 'Pfeiffer_TPG256A.ui'), self)
+        main_file = os.path.abspath(sys.modules['__main__'].__file__)
+        uic.loadUi(os.path.join(os.path.dirname(main_file), 'Pfeiffer_TPG256A.ui'), self)
 
         # Compile the displays and plot checkboxes into arrays since they are used together.
         self.pressure_displays = [self.pressureDisplayCh1, self.pressureDisplayCh2,
