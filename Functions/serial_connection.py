@@ -58,7 +58,9 @@ class SerialPort(QObject):
 # THE INITIALISATION FUNCTION IN THIS CLASS JUST CONFIRMS THE CORRECT PORT HAS 
 # BEEN ACCESSED. THE MAIN SERIAL CONNECTION ARE RUN IN A SEPARATE THREAD.
 class pressureSerial(SerialPort):
-    queryGauge = pyqtSignal()
+    updatePollRate = pyqtSignal(int)
+    disconnectGauge = pyqtSignal()
+    connectionClosed = pyqtSignal()
 
     def __init__(self, comPortCombo, comRefresh, connectButton, defaultCOM='COM1'):
         # Initialise general serial port options
@@ -73,9 +75,12 @@ class pressureSerial(SerialPort):
         self.connectButton = connectButton
         self.connectButton.clicked.connect(lambda: self.initialise_pressure_gauge())
 
+        self.worker = None
+        self.monitor_thread = None
+
     def initialise_pressure_gauge(self):
         if self.connected:
-            self.worker.process_disconnect()
+            self.disconnect_pressure_gauge()
             return
 
         # Get the set COM port
@@ -119,7 +124,7 @@ class pressureSerial(SerialPort):
 
 
     def process_responses(self, status, idx, response):
-        try:
+        if idx != -1:
             # This is the usual response
             if status == 0:
                 # Set display, with numbers rounded to 2 d.p.
@@ -140,11 +145,16 @@ class pressureSerial(SerialPort):
             if idx == 5:
                 self.update_pressure(self.current_pressures)
 
-        except ValueError:
-            if idx == 'unexpected response':
-                with open('Log files/error_log.txt', 'a') as f:
-                    f.write(time.strftime('%Y-%m-%d %H-%M-%S', time.localtime()))
-                    f.write(f': Unexpected response from MaxiGauge. Command and response: {response}\n')
+        else:
+            with open('Log files/error_log.txt', 'a') as f:
+                f.write(time.strftime('%Y-%m-%d %H-%M-%S', time.localtime()))
+                f.write(f': Unexpected response from MaxiGauge. Command and response: {response}\n')
+
+
+    def update_poll_rate(self, read_period):
+        read_period = int(read_period)
+        self.pressure_read_period = read_period
+        self.updatePollRate.emit(read_period)
 
 
     def disconnect_pressure_gauge(self):
@@ -152,7 +162,7 @@ class pressureSerial(SerialPort):
         self.connected = False
 
         # Close monitoring thread
-        self.monitor_thread.quit()
+        self.disconnectGauge.emit()
 
         # Allow COM port to be changed
         self.comPortCombo.setEnabled(True)
@@ -166,6 +176,11 @@ class pressureSerial(SerialPort):
             display_widget.setText('')
 
 
+    @pyqtSlot()
+    def signal_disconnect_complete(self):
+        self.connectionClosed.emit()
+
+
     def set_up_monitoring_thread(self):
         self.monitor_thread = QThread()
 
@@ -174,22 +189,26 @@ class pressureSerial(SerialPort):
 
         # Set variables from main thread
         self.worker.comPort = self.com_port
-
-        self.queryGauge.connect(self.worker.query_gauge)
+        self.worker.poll_rate = self.pressure_read_period
 
         # Move the worker to the thread
         self.worker.moveToThread(self.monitor_thread)
 
         # Connect signals and slots
         self.monitor_thread.started.connect(self.worker.run)
+        self.updatePollRate.connect(self.worker.update_poll_rate)
+        self.disconnectGauge.connect(self.worker.process_disconnect)
         # Connect responses to the correct processes
         self.worker.no_response.connect(communications_error)
+        self.worker.no_response.connect(self.disconnect_pressure_gauge)
         self.worker.output.connect(self.process_responses)
+
         # Clean up for when thread completes
         self.worker.finished.connect(self.monitor_thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
+
         self.monitor_thread.finished.connect(self.monitor_thread.deleteLater)
-        self.worker.finished.connect(self.disconnect_pressure_gauge)
+        self.monitor_thread.finished.connect(self.signal_disconnect_complete)
 
         # Start the thread
         self.monitor_thread.start()

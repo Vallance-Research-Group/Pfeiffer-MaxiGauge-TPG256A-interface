@@ -66,35 +66,38 @@ class MainWindow(QtWidgets.QMainWindow):
         # Initialise for writing log
         self.date = None
 
+        # Connections
+        self.pressureGaugeSerial.connectionClosed.connect(self._on_pressure_thread_finished)
+
+        # Set flags
+        self._closing_down = False
+
 
     # Timers ##########################################################################
     def initialise_timers(self):
-        # Set up query and logging timers, which cause the pressure to be queried
-        # and the log file to be written (if appropriate conditions are met) at
-        # regular intervals
-        self.query_timer = QTimer()
+        # Set up the logging timer, which writes the log file (if appropriate
+        # conditions are met) at regular intervals
         self.log_timer = QTimer()
-
-        self.query_timer.timeout.connect(self.execute_gauge_query)
         self.log_timer.timeout.connect(self.execute_log_write)
-
-        self.query_timer.start(self.pressure_read_period)
         self.log_timer.start(self.log_write_period)
+
+        # Add the default pressure read period to the serial port class
+        self.pressureGaugeSerial.pressure_read_period = self.pressure_read_period
 
 
     def update_pressure_query_timer(self):
         value, res = QtWidgets.QInputDialog.getDouble(self,
                             'Set pressure poll rate',
-                            'Set pressure polling rate (in s) between 0.25 s and 10 s.',
+                            'Set pressure polling rate (in s) between 0.5 s and 10 s.',
                             self.pressure_read_period / 1000, # Initial value
-                            0.25,                             # Minimum value
+                            0.5,                              # Minimum value
                             10,                               # Maximum value
                             2)                                # Decimal places
 
         # Update timer time period if updated. Timer takes ms input.
         if res:
             self.pressure_read_period = int(value * 1000)
-            self.query_timer.start(self.pressure_read_period)
+            self.pressureGaugeSerial.update_poll_rate(self.pressure_read_period)
 
 
     def update_log_timer(self):
@@ -299,12 +302,43 @@ class MainWindow(QtWidgets.QMainWindow):
     ###############################################################################
 
 
+    def disconnect_pressure_gauge(self):
+        # Make sure the pressure gauge 
+        if self.pressureGaugeSerial.monitor_thread and self.pressureGaugeSerial.monitor_thread.isRunning():
+            # Close connection to pressure gauge on closing the window
+            self.pressureGaugeSerial.disconnectGauge.emit()
+
+            return False
+        return True
+
+
+    @pyqtSlot()
+    def _on_pressure_thread_finished(self):
+        # Set reference to the worker and monitor_thread variables to None, since thread closed
+        self.pressureGaugeSerial.worker = None
+        self.pressureGaugeSerial.monitor_thread = None
+
+        # If a close event was issued, continue closing the GUI
+        if self._closing_down:
+            self.close()
+
 
     def closeEvent(self, event):
-        # Close connection to pressure gauge on closing the window
-        if self.pressureGaugeSerial.connected:
-            self.pressureGaugeSerial.worker.process_disconnect()
+        if self._closing_down:
+            event.accept()
+            return
 
+        if self.disconnect_pressure_gauge():
+            event.accept()
+
+        else:
+            event.ignore()
+            self._closing_down = True
+
+        # Close subwindows
         self.pressure_plot.plot_colour_window.close()
 
-        time.sleep(0.3)
+        # Stop the log timer
+        self.log_timer.stop()
+        self.log_timer.deleteLater()
+        self.log_timer = None
