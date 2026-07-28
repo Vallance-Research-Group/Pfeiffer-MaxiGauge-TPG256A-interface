@@ -309,7 +309,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pressureGaugeSerial.disconnectGauge.emit()
 
             return False
-        print(self.pressureGaugeSerial.monitor_thread)
         return True
 
 
