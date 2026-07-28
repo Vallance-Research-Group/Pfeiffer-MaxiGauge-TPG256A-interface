@@ -7,33 +7,52 @@ class pressureGauge_Qthread(QObject):
     no_response = pyqtSignal(str)
     finished = pyqtSignal()
 
+    def __init__(self):
+        super().__init__()
+        self._disconnecting = False
+        self.poll_timer = None
+        self.serial_context = None
+
     def run(self):
-        # Set up the required variables
-        self.response = True
+        # Connect to COM port
+        self.serial_context = serial.Serial(port=self.comPort, timeout=1, write_timeout=1)
+        self.pressureSer = self.serial_context.__enter__()
 
-        # Set up connection to close process on disconnect
-        self.finished.connect(self.process_disconnect)
+        # Start up polling timer 
+        self.poll_timer = QTimer(self)
+        self.poll_timer.setInterval(self.poll_rate)
+        self.poll_timer.timeout.connect(self.query_gauge)
+        self.poll_timer.start()
 
-        # Open the serial port and query 
-        with serial.Serial(port=self.comPort, timeout=1, write_timeout=1) as pressureSer:
-            self.pressureSer = pressureSer
-            time.sleep(0.1)
 
-            # This loop runs until the disconnect button is pressed
-            while self.response:
-                # Sleep most of the time to reduce resource usage
-                time.sleep(0.1)
+    @pyqtSlot(int)
+    def update_poll_rate(self, poll_rate):
+        self.poll_timer.setInterval(poll_rate)
 
-            # Flush out any remaining commands and responses
-            time.sleep(0.3)
+
+    @pyqtSlot()
+    def process_disconnect(self):
+        if self._disconnecting:
+            return
+
+        self._disconnecting = True
+
+        if self.poll_timer is not None:
+            self.poll_timer.stop()
+            self.poll_timer.deleteLater()
+            self.poll_timer = None
+
+        if self.serial_context is not None:
+            self.serial_context.__exit__(None,None,None)
+            self.serial_context = None
 
         self.finished.emit()
-
-    def process_disconnect(self):
-        # Will stop after the next iteration
-        self.response = False
+        
 
     def query_gauge(self):
+        if self._disconnecting:
+            return
+
         # Read pressure for all sensors
         for sensor_no in range(1,7):
             try:
@@ -44,7 +63,7 @@ class pressureGauge_Qthread(QObject):
 
                 if response[:1] != b'\x06':
                     self.response = False
-                    self.output.emit(-1, 'unexpected response', f'PR{sensor_no}\r' + response.decode())
+                    self.output.emit(-1, -1, f'PR{sensor_no}\r' + response.decode())
                     print(f'PR{sensor_no}\r' + response.decode())
                     self.no_response.emit('Unexpected response from the MaxiGauge.')
                     return b''
