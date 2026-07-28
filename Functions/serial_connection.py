@@ -152,7 +152,9 @@ class pressureSerial(SerialPort):
 
 
     def update_poll_rate(self, read_period):
+        read_period = int(read_period)
         self.pressure_read_period = read_period
+        self.updatePollRate.emit(read_period)
 
 
     def disconnect_pressure_gauge(self):
@@ -204,7 +206,7 @@ class pressureSerial(SerialPort):
         # Clean up for when thread completes
         self.worker.finished.connect(self.monitor_thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
-        
+
         self.monitor_thread.finished.connect(self.monitor_thread.deleteLater)
         self.monitor_thread.finished.connect(self.signal_disconnect_complete)
 

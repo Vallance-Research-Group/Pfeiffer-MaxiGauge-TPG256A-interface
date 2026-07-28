@@ -88,9 +88,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_pressure_query_timer(self):
         value, res = QtWidgets.QInputDialog.getDouble(self,
                             'Set pressure poll rate',
-                            'Set pressure polling rate (in s) between 0.25 s and 10 s.',
+                            'Set pressure polling rate (in s) between 0.5 s and 10 s.',
                             self.pressure_read_period / 1000, # Initial value
-                            0.25,                             # Minimum value
+                            0.5,                              # Minimum value
                             10,                               # Maximum value
                             2)                                # Decimal places
 
